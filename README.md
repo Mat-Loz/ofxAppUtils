@@ -24,12 +24,13 @@ Description
 
 ofxAppUtils is a set of utilities for OpenFrameworks application development including:
 
-* ofxApp: an ofBaseApp/ofxiPhoneApp extension with built in screen scaling, projection mapping transforms, quad warping, and an optional ofxControlPanel
+* ofxApp: an ofBaseApp/ofxiPhoneApp extension with optional screen scaling transformer & scene manager
 * ofxScene: a mini ofBaseApp/ofxiPhoneApp for writing stand alone scenes
 * ofxSceneManager: handles a list of scenes using a std::map
 * ofxTransformer: open gl transformer for origin translation, screen scaling, mirroring, and quad warping
 * ofxQuadWarper: an open gl matrix quad warper (useful for oblique projection mapping)
 * ofxTimer: a simple millis-based timer
+* ofxMovingAverage: a simple linear moving average
 * ofxParticle: a simple time-based particle base class
 * ofxParticleSystem: an auto manager for ofxParticles
 * ofxBitmapString: a stream interface for ofDrawBitmapString
@@ -52,19 +53,18 @@ The addon should sit in `openFrameworks/addons/ofxAppUtils/`.
 
 You will may also need the following addon dependencies:
 
-* ofxXmlSettings: included with OpenFrameworks (optional)
-* ofxControlPanel: https://github.com/kylemcdonald/ofxControlPanel (optional, also requires ofxXmlSettings)
+* ofxGui: included with OpenFrameworks
 
-To enable the control panel (and ofxControlPanel dependency), define `OFX_APP_UTILS_USE_CONTROL_PANEL` in your CFLAGS.
-
-To disable the xml transform load/save (and ofxXmlSettings dependency), define `OFX_APP_UTILS_NO_XML` in your CFLAGS.
-
-For Xcode, see the example project Project.xcconfig files on how to set the defines.
+To enable the ofxGui transformer panel, include `ofxTransformerPanel.h`, create an "ofxTransformerPanel" object, and set the transformer in _ofxTransformerPanel::setup()_.
 
 Running the Example Project
 -------------------------------
 
 The example projects are in the `appUtilsExample` & `appUtilsIOSExample` folders.
+
+Project files for the examples are not included so you will need to generate the project files for your operating system and development environment using the OF ProjectGenerator which is included with the OpenFrameworks distribution.
+
+Point the ProjectGenerator to `addons/ofxAppUtils`, change the project name to the **exact** name of the example you want to generate (ie `appUtilsExample`), and make sure to choose `ofxAppUtils` (& optionally `ofxGui` for appUtilsExample) from the addons. Hitting "Generate Project" will populate that example with the project files you will need to build it.
 
 ### OSX
 
@@ -88,6 +88,14 @@ An example Visual Studio solution as well as a Codeblocks workspace are included
 Adding ofxAppUtils to an Existing Project
 ---------------------------------------
 
+### ProjectGenerator
+
+Select ofxAppUtils and other addons used by your project from the available addons in the ProjectGenerator, select the parent folder of your project, and set the *exact* name of the existing project in the text box. This will overwrite the existing project files with new ones that now include ofxAppUtils.
+
+*Note: you will lose any custom settings you've added manually to your project.*
+
+### Manual Method
+
 _Note: These instructions are for manually adding ofxAppUtils to an existing project. You do not need to follow these steps if you use the ProjecGenerator app, except for adding the OFX_APP_UTILS defines._
 
 If you want to add ofxAppUtils to another project, you need to make sure you include the src folders:
@@ -100,35 +108,13 @@ openFrameworks/addons/ofxAppUtils/src
 * create a new group "ofxAppUtils"
 * drag these directories from ofxAppUtils into this new group: ofxAppUtils/src
 * you also need to add the following addon dependencies (if you're using them) in a similar manner:
-	* ofxControlPanel
-	* ofxXmlSettings
+	* ofxGui
 * make sure to remove any of the example folders in the Xcode project tree for any of the addons you've added manually
-* add defines to the project C++FLAGS if you want to disable the control panel and/or xml saving: 
-	* Select the Project -> Build Settings -> Other C++ Flags
-	* add the following to enable the control panel:
-	<pre>
-	-DOFX_APP_UTILS_USE_CONTROL_PANEL
-	</pre>
-	* add the following to disable transform xml saving:
-	<pre>
-	-DOFX_APP_UTILS_NO_XML
-	</pre>
-	
-On iOS you will probably don't want to enable the control panel via the `OFX_APP_UTILS_USE_CONTROL_PANEL` define as it doesn't really work with touch screens.
 
 ### For Linux (Makefiles & Codeblocks):
 
 * edit addons.make in your project folder and add the following line to the end of the file: 
 	<pre>ofxAppUtils</pre>
-* edit config.make in your project folder and update the USER_CFLAGS line:
-  *  if you want to enable the control panel:
-	<pre>
-	USER_CFLAGS = -DOFX_APP_UTILS_USE_CONTROL_PANEL
-	</pre>
-  *  if you want to disable the transform xml saving:
-	<pre>
-	USER_CFLAGS = -DOFX_APP_UTILS_NO_XML
-	</pre>
 	
 ### For Codeblocks (Win):
 
@@ -141,14 +127,6 @@ On iOS you will probably don't want to enable the control panel via the `OFX_APP
 	* select "Build options..."
 	* make sure the project name is selected in the tree (not release or debug)
 	* select the "Compiler settings" tab
-	  * add the following to the "#defines" tab if you want to enable the control panel:
-	<pre>
-	OFX_APP_UTILS_USE_CONTROL_PANEL
-	</pre>
-	* add the following to the "#defines" tab if you want to disable the transform xml saving:
-	<pre>
-	OFX_APP_UTILS_NO_XML
-	</pre>
 	* select the "Search directories" tab, click add the search paths:
 	<pre>
 	..\\..\\..\addons\ofxAppUtils\src
@@ -159,17 +137,8 @@ On iOS you will probably don't want to enable the control panel via the `OFX_APP
 * drag the ofxApputils/src folder onto the project tree
 * right click on the project in the project tree and select Properties
 * set the Configuration to All Configurations
-* add the defines and searhc paths:
-  * add the following to Configuration Properties->C/C++->Preprocessor->Preprocessor Definitions:
-    * enable the control panel:
-	<pre>
-	OFX_APP_UTILS_USE_CONTROL_PANEL
-	</pre>
-	* disable the transform xml saving:
-	<pre>
-	OFX_APP_UTILS_NO_XML
-	</pre>
-  * add to the search paths in Configuration Properties->C/C++->General->Additonal INclude DIrectories:
+* add the defines and search paths:
+  * add to the search paths in Configuration Properties->C/C++->General->Additonal Include Directories:
   <pre>
   ..\\..\\..\\addons\ofxAppUtils\src
   </pre>

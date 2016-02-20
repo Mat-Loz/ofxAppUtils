@@ -14,6 +14,15 @@
 
 #include "ofxAppUtils.h"
 
+// optional ofxGUI control panel for transformer,
+// uncomment this if you're using ofxGui in this project
+//#define HAVE_OFX_GUI
+
+#ifdef HAVE_OFX_GUI
+	#include "ofxGui.h"
+	#include "ofxTransformPanel.h"
+#endif
+
 // we only specify a pointer to the Particle Scene here, so tell the compiler
 // that it exists as a class and we can include the class header in testApp.cpp
 class ParticleScene;
@@ -22,22 +31,23 @@ class ParticleScene;
 ///
 /// controls:
 ///     - L & R arrows to change scenes (note: wait for 2s transition)
-///		- D arrow to change to "no scene" & U arrow to return to last scene
+///     - D arrow to change to "no scene" & U arrow to return to last scene
 ///     - 'd' key to toggle debug mode and enable control panel & warp editor
 ///     - 'm' key to mirror the render area on the x axis
 ///     - 'n' key to mirror the render area on the y axis
-///		- 'a' key to enable aspect ratio scaling
-///		- 'c' key to enable auto centering, only applied if apsect ratio scaling
+///     - 'a' key to enable aspect ratio scaling
+///     - 'c' key to enable auto centering, only applied if apsect ratio scaling
 ///           is on and the quad warper is off
 ///     - 'q' key to toggle to quad warper
 ///     - 'f' to toggle fullscreen mode
-///		- '-' & '=': remove/add particles when the particle scene is running
+///     - '-' & '=': remove/add particles when the particle scene is running
+///     - 'o' to toggle scene overlap
 ///
-class testApp : public ofxApp { // <-- inherits ofxApp instead of ofBaseApp
+class ofApp : public ofxApp { // <-- inherits ofxApp instead of ofBaseApp
 	
 	public:
 	
-		testApp()  {}
+		ofApp()  {}
 	
 		void setup();
 		void update();
@@ -52,10 +62,17 @@ class testApp : public ofxApp { // <-- inherits ofxApp instead of ofBaseApp
 		
 		void windowResized(int w, int h);
 
+		// rendering transformer
+		ofxTransformer transformer;
+
 		// handles the scenes
 		ofxSceneManager sceneManager;
 		int lastScene;
 		
 		// keep a pointer to the Particle Scene, so we can modify it more easily
 		ParticleScene *particleScene;
+	
+		#ifdef HAVE_OFX_GUI
+			ofxTransformPanel panel;
+		#endif
 };

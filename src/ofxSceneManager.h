@@ -17,10 +17,8 @@
 #include "ofxScene.h"
 #include "ofxTimer.h"
 
-/**
-	\class	SceneManager
-	\brief	a map based scene manager
-**/
+///	\class	SceneManager
+///	\brief	a map based scene manager
 class ofxSceneManager {
 	public:
 
@@ -50,7 +48,7 @@ class ofxSceneManager {
 		/// play/pause the current scene
 		void run(bool run);
 		void runToggle();
-		bool isRunning();	///< is the current scene running?
+		bool isRunning(); ///< is the current scene running?
 		
 		/// scene transport
 		void noScene(bool now=false);
@@ -81,7 +79,7 @@ class ofxSceneManager {
 		int getCurrentSceneIndex();
 		
 		/// returns the current number of scenes
-		int getNumScenes()	{return _scenes.size();}
+		int getNumScenes() {return _scenes.size();}
 		
 	/// \section Util
 		
@@ -89,6 +87,11 @@ class ofxSceneManager {
 		/// note: this is ignored it the change is done "now"
 		unsigned int getMinChangeTime();
 		void setMinChangeTime(unsigned int time);
+	
+		/// get/set overlapping current & new scene updates on a scene change
+		/// note: current scene does not change until end of the transition
+		void setOverlap(bool overlap);
+		bool getOverlap();
 		
 	/// \section Current Scene Callbacks
 		
@@ -114,8 +117,8 @@ class ofxSceneManager {
 		/// are handled during transtions, etc correctly
 		void windowResized(int w, int h);
 		
-	#ifdef TARGET_OF_IPHONE
-		/// ofxIphone callbacks
+	#ifdef TARGET_OF_IOS
+		/// ofxIOSApp callbacks
 		void touchDown(ofTouchEventArgs & touch);
 		void touchMoved(ofTouchEventArgs & touch);
 		void touchUp(ofTouchEventArgs & touch);
@@ -158,16 +161,18 @@ class ofxSceneManager {
 			SCENE_NONE = -1,
 		};
 	
-		ofxScene*	_currentScenePtr;       ///< pointer to the current scene
-		ofxScene::RunnerScene* _currentRunnerScenePtr;  ///< pointer to the current runner scene
-		int _currentScene;	///< the current scene, < 0 if none
-		int _newScene;		///< scene to change to
-		bool _bChangeNow;	///< ignore enter and exit when changing scenes?
+		ofxScene*	_currentScenePtr; //< pointer to the current scene
+		ofxScene::RunnerScene* _currentRunnerScenePtr; //< pointer to the current runner scene
+		ofxScene::RunnerScene* _newRunnerScenePtr; //< pointer to the next runner scene (when overlapping)
+		int _currentScene; //< the current scene, < 0 if none
+		int _newScene;     //< scene to change to
+		bool _bChangeNow;  //< ignore enter and exit when changing scenes?
+		bool _bOverlap;    //< make new scenes start entering while current scene is finishing?
 		
-		std::map<std::string, ofxScene::RunnerScene*> _scenes;	///< scenes
+		std::map<std::string, ofxScene::RunnerScene*> _scenes; //< scenes
 	
-		bool _bSignalledAutoChange;		///< has an automatic change been called?
-		unsigned int _minChangeTimeMS;	///< minimum ms to wait before accepting scene change commands
+		bool _bSignalledAutoChange;    //< has an automatic change been called?
+		unsigned int _minChangeTimeMS; //< minimum ms to wait before accepting scene change commands
 
-		ofxTimer _sceneChangeTimer;	///< timers to keep track of change times
+		ofxTimer _sceneChangeTimer;    //< timers to keep track of change times
 };

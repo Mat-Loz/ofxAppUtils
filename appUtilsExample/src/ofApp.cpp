@@ -8,54 +8,46 @@
  * See https://github.com/danomatika/ofxAppUtils for documentation
  *
  */
-#include "testApp.h"
+#include "ofApp.h"
 
 #include "scenes/scenes.h"
 
 //--------------------------------------------------------------
-void testApp::setup() {
+void ofApp::setup() {
 
 	// setup for nice jaggy-less rendering
 	ofSetVerticalSync(true);
 	ofBackground(0, 0, 0);
 
 	// setup the render size (working area)
-	setRenderSize(600, 400);
+	transformer.setRenderSize(600, 400);
 
 	// turn on transform origin translation and scaling to screen size,
 	// disable quad warping, and enable aspect ratio and centering when scaling
-	setTransforms(true, true, false, true, true);
-
-	// the control panel is setup automatically, of course you can still change
-	// all the settings manually here
-
-	// add the built in transform control to control panel (adds new panel)
-	//
-	// loads and saves control panel settings to "controlPanelSettings.xml"
-	// in the data folder 
-	addTransformControls();
+	transformer.setTransforms(true, true, false, true, true);
 	
-	// load saved control panel settings
-	// loads and saves to "controlPanelSettings.xml" in the data folder
-	// or use your own filename
-	// note: this may override what was set with setTransforms
-	loadControlSettings();
+	// set the ofxApp transformer so it's automatically applied in draw()
+	setTransformer(&transformer);
 	
-	// load saved quad warper settings
-	// loads and saves to "quadWarper.xml" in the data folder
-	// or use your own filename
-	loadWarpSettings();
+	#ifdef HAVE_OFX_GUI
+		// setup transform panel with transformer pointer,
+		// loads settings & quad warper xml files if found
+		panel.setup(&transformer);
+	#endif
 	
 	// load scenes
 	particleScene = (ParticleScene*) sceneManager.add(new ParticleScene()); // save pointer
 	sceneManager.add(new LineScene());
-	sceneManager.setup(true);	// true = setup all the scenes now (not on the fly)
+	sceneManager.setup(true); // true = setup all the scenes now (not on the fly)
 	ofSetLogLevel("ofxSceneManager", OF_LOG_VERBOSE); // lets see whats going on inside
 	
 	// start with a specific scene
 	// set now to true in order to ignore the scene fade and change now
 	sceneManager.gotoScene("Lines", true);
 	lastScene = sceneManager.getCurrentSceneIndex();
+	
+	// overlap scenes when transitioning
+	sceneManager.setOverlap(true);
 	
 	// attach scene manager to this ofxApp so it's called automatically,
 	// you can also call the callbacks (update, draw, keyPressed, etc) manually
@@ -71,28 +63,41 @@ void testApp::setup() {
 }
 
 //--------------------------------------------------------------
-void testApp::update() {
+void ofApp::update() {
 
-	// the control panel and current scene are automatically updated before
-	// this function
+	// the current scene is automatically updated before this function
+
+	#ifdef HAVE_OFX_GUI
+		// update the transform panel when in debug mode
+		if(isDebug()) {
+			panel.update();
+		}
+	#endif
 }
 
 //--------------------------------------------------------------
-void testApp::draw() {
+void ofApp::draw() {
 
 	// the current scene is automatically drawn before this function
 
 	// show the render area edges with a white rect
-	if(bDebug) {
+	if(isDebug()) {
 		ofNoFill();
 		ofSetColor(255);
 		ofSetRectMode(OF_RECTMODE_CORNER);
-		ofRect(1, 1, getRenderWidth()-2, getRenderHeight()-2);
+		ofDrawRectangle(1, 1, getRenderWidth()-2, getRenderHeight()-2);
 		ofFill();
 	}
 	
 	// drop out of the auto transform space back to OF screen space
-	popTransforms();
+	transformer.pop();
+	
+	#ifdef HAVE_OFX_GUI
+		// draw the transform panel when in debug mode
+		if(isDebug()) {
+			panel.draw();
+		}
+	#endif
 	
 	// draw current scene info using the ofxBitmapString stream interface
 	// to ofDrawBitmapString
@@ -103,17 +108,16 @@ void testApp::draw() {
 	
 	// go back to the auto transform space
 	//
-	// this is actually done automatically if the transforms were popped
-	// before the control panel is drawn, but included here for completeness
-	pushTransforms();
+	// this is actually done automatically if the transformer is set but
+	// included here for completeness
+	transformer.push();
 
-	// the control panel and warp editor are drawn automatically after this
-	// function
+	// the warp editor is drawn automatically after this function
 }
 
 // current scene input functions are called automatically before calling these
 //--------------------------------------------------------------
-void testApp::keyPressed(int key) {
+void ofApp::keyPressed(int key) {
 	
 	switch (key) {
 	
@@ -122,23 +126,23 @@ void testApp::keyPressed(int key) {
 			break;
 			
 		case 'a':
-			setAspect(!getAspect());
+			transformer.setAspect(!transformer.getAspect());
 			break;
 			
 		case 'c':
-			setCentering(!getCentering());
+			transformer.setCentering(!transformer.getCentering());
 			break;
 			
 		case 'm':
-			setMirrorX(!getMirrorX());
+			transformer.setMirrorX(!transformer.getMirrorX());
 			break;
 			
 		case 'n':
-			setMirrorY(!getMirrorY());
+			transformer.setMirrorY(!transformer.getMirrorY());
 			break;
 			
 		case 'q':
-			setWarp(!getWarp());
+			transformer.setWarp(!transformer.getWarp());
 			break;
 			
 		case 'f':
@@ -174,33 +178,35 @@ void testApp::keyPressed(int key) {
 			if(sceneManager.getCurrentScene() == particleScene) {
 				particleScene->addOneParticle();
 			}
-			break;	
+			break;
+			
+		case 'o':
+			sceneManager.setOverlap(!sceneManager.getOverlap());
+			break;
 	}
 }
 
 //--------------------------------------------------------------
-void testApp::keyReleased(int key) {
+void ofApp::keyReleased(int key) {
 }
 
 //--------------------------------------------------------------
-void testApp::mouseMoved(int x, int y) {
+void ofApp::mouseMoved(int x, int y) {
 }
 
 //--------------------------------------------------------------
-void testApp::mouseDragged(int x, int y, int button) {
+void ofApp::mouseDragged(int x, int y, int button) {
 }
 
 //--------------------------------------------------------------
-void testApp::mousePressed(int x, int y, int button) {
+void ofApp::mousePressed(int x, int y, int button) {
 }
 
 //--------------------------------------------------------------
-void testApp::mouseReleased(int x, int y, int button) {
+void ofApp::mouseReleased(int x, int y, int button) {
 }
 
 //--------------------------------------------------------------
-void testApp::windowResized(int w, int h) {
-
-	// set up transforms with new screen size
-	setNewScreenSize(w, h);
+void ofApp::windowResized(int w, int h) {
+	// transformer.setNewScreenSize() is automatically called if the transformer is set
 }

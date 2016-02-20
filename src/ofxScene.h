@@ -13,13 +13,11 @@
 #include "ofxApp.h"
 #include "ofxTimer.h"
 
-/**
-	\class  Scene
-	\brief  application scene abstract class
-**/
+///	\class  Scene
+///	\brief  application scene abstract class
 class ofxScene :
 
-#ifdef TARGET_OF_IPHONE
+#ifdef TARGET_OF_IOS
 	public ofxiOSApp {
 #else
 	public ofBaseApp {
@@ -77,10 +75,10 @@ class ofxScene :
 		inline bool isExitingFirst()    {return _bExitingFirst;}
 
 		/// this scene is done and wants to start exiting, note: does not start exiting
-		inline void done()      		{_bDone = true;}
+		inline void done()              {_bDone = true;}
 
 		/// does this scene want to exit?
-		inline bool isDone()    		{return _bDone;}
+		inline bool isDone()            {return _bDone;}
 		
 	/// \section Util
 		
@@ -96,16 +94,16 @@ class ofxScene :
 		inline bool isRunning() {return _bRunning;}
 
 		/// is the scene already setup?
-		inline bool isSetup()	{return _bSetup;}
+		inline bool isSetup()   {return _bSetup;}
 		
 		/// controls whether the scene's setup function
 		/// is called only once or each time a scene change is made
 		inline void setSingleSetup(bool single) {_bSingleSetup = single;}
-		inline bool usingSingleSetup() {return _bSingleSetup;}
+		inline bool usingSingleSetup()          {return _bSingleSetup;}
 		
 	private:
 	
-		std::string _name;		///< the name of this scene
+		std::string _name; ///< the name of this scene
 		bool _bSetup, _bRunning, _bEntering, _bEnteringFirst,
 			 _bExiting, _bExitingFirst, _bDone, _bSingleSetup;
 
@@ -115,7 +113,7 @@ class ofxScene :
 		/// do not use directly!
 		class RunnerScene :
 
-		#ifdef TARGET_OF_IPHONE
+		#ifdef TARGET_OF_IOS
 			public ofxiOSApp {
 		#else
 			public ofBaseApp {
@@ -135,5 +133,72 @@ class ofxScene :
 				ofxScene* scene;
 		};
 		
-		friend class RunnerScene;  ///< used to wrap this app
+		friend class RunnerScene; //< used to wrap this app
+};
+
+///	\class  FadeScene
+///	\brief  application scene abstract class with calculated alpha fade
+///
+/// note: this only automates calculating a normalized alpha value, it's up to
+///       you to use this in your drawing code and call ofEnableAlphaBlending()
+class ofxFadeScene : public ofxScene {
+
+	public:
+	
+		ofxFadeScene(const string& name) : ofxScene(name) {
+			fadeIn = 0;
+			fadeOut = 0;
+			fadeTimer.set();
+			alpha = 1.0;
+		}
+	
+		/// calculates fade in
+		void updateEnter() {
+			if(isEnteringFirst()) {
+				fadeTimer.setAlarm(fadeIn*0.5);
+				alpha = 0.0;
+			}
+			alpha = fadeTimer.getDiffN();
+			update();
+			if(fadeTimer.alarm()) {
+				finishedEntering();
+				alpha = 1.0;
+			}
+		}
+	
+		/// calculates fade out
+		void updateExit() {
+			if(isExitingFirst()) {
+				fadeTimer.setAlarm(fadeOut*0.5);
+				alpha = 1.0;
+			}
+			alpha = abs(fadeTimer.getDiffN()-1.0);
+			update();
+			if(fadeTimer.alarm()) {
+				finishedExiting();
+				alpha = 0.0;
+			}
+		}
+	
+		/// set transition fade in and out times (ms)
+		void setFade(unsigned int fadeInMS, unsigned int fadeOutMS) {
+			fadeIn = fadeInMS;
+			fadeOut = fadeOutMS;
+		}
+		void setFadeIn(unsigned int fadeInMS)  {fadeIn = fadeInMS;}
+		void setFadeOut(unsigned int fadeOutMS) {fadeOut = fadeOutMS;}
+	
+		/// get transition fade in time (ms)
+		unsigned int getFadeIn() {return fadeIn;}
+	
+		/// get transition fade out time (ms)
+		unsigned int getFadeOut() {return fadeOut;}
+
+	protected:
+	
+		unsigned int fadeIn;  //< scene transition fade in (ms), default: 0
+		unsigned int fadeOut; //< scene transition fade out (ms), default: 0
+	
+		ofxTimer fadeTimer; //< for calculating transition fade
+		float alpha; //< calculated fade alpha value, normalized 0-1.0
 };

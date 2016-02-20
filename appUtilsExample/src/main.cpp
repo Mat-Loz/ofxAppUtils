@@ -9,15 +9,13 @@
  *
  */
 #include "ofMain.h"
-#include "testApp.h"
-#include "ofAppGlutWindow.h"
+#include "ofApp.h"
 
-int main(){
+int main() {
 
-	ofAppGlutWindow window;
-	ofSetupOpenGL(&window, 800, 600, OF_WINDOW);
+	ofSetupOpenGL(800, 600, OF_WINDOW);
 
 	// this replaces ofRunApp() and kicks off the running of the app
 	// with the app utils
-	ofRunAppWithAppUtils(new testApp());
+	ofRunAppWithAppUtils(new ofApp());
 }

@@ -8,12 +8,12 @@
  * See https://github.com/danomatika/ofxAppUtils for documentation
  *
  */
-#include "testApp.h"
+#include "ofApp.h"
 
 #include "TextScene.h"
 
 //--------------------------------------------------------------
-void testApp::setup(){
+void ofApp::setup(){
 
 	// initialize the accelerometer
 	ofxAccelerometer.setup();
@@ -23,18 +23,21 @@ void testApp::setup(){
 	ofBackground(0, 0, 0);
 
 	// setup the render size (working area)
-	setRenderSize(640, 480); // 4:3
+	transformer.setRenderSize(640, 480); // 4:3
 	
-	// setup the built in render transforms
-	setScale(true); // scale to screen size
-	setAspect(true); // keep aspect ratio when scaling
-	setCentering(true); // center render area in screen
+	// setup the render transforms
+	transformer.setScale(true); // scale to screen size
+	transformer.setAspect(true); // keep aspect ratio when scaling
+	transformer.setCentering(true); // center render area in screen
 	
 	// you could also do the same with the setTransforms() function
 	//
 	// turn off transform origin translation and scaling to screen size,
 	// disable quad warping, and enable aspect ratio and centering when scaling
-	//setTransforms(false, true, false, true, true);
+	//transformer.setTransforms(false, true, false, true, true);
+	
+	// apply the transformer automatically
+	setTransformer(&transformer);
 	
 	// load scenes
 	sceneManager.add(new TextScene("Scene One", "1"));
@@ -70,23 +73,23 @@ void testApp::setup(){
 }
 
 //--------------------------------------------------------------
-void testApp::update(){
+void ofApp::update(){
 	// current scene is automatically updated before this function
 }
 
 //--------------------------------------------------------------
-void testApp::draw(){
+void ofApp::draw(){
 	// the current scene is automatically drawn before this function
 	
 	// show the render area edges with a white rect
 	ofNoFill();
 	ofSetColor(127);
 	ofSetRectMode(OF_RECTMODE_CORNER);
-	ofRect(1, 1, getRenderWidth()-2, getRenderHeight()-2);
+	ofDrawRectangle(1, 1, getRenderWidth()-2, getRenderHeight()-2);
 	ofFill();
 	
 	// drop out of the auto transform space back to OF screen space
-	popTransforms();
+	transformer.pop();
 	
 	// draw the buttons
 	prevButton.draw();
@@ -103,29 +106,24 @@ void testApp::draw(){
 	//
 	// this is actually done automatically if the transforms were popped
 	// before the control panel is drawn, but included here for completeness
-	pushTransforms();
-}
-
-//--------------------------------------------------------------
-void testApp::exit(){
-
+	transformer.push();
 }
 
 // current scene input functions are called automatically before calling these
 //--------------------------------------------------------------
-void testApp::touchDown(ofTouchEventArgs & touch){	
+void ofApp::touchDown(ofTouchEventArgs & touch){	
 	prevButton.inside(touch.x, touch.y);
 	nextButton.inside(touch.x, touch.y);
 }
 
 //--------------------------------------------------------------
-void testApp::touchMoved(ofTouchEventArgs & touch){
+void ofApp::touchMoved(ofTouchEventArgs & touch){
 	prevButton.inside(touch.x, touch.y);
 	nextButton.inside(touch.x, touch.y);
 }
 
 //--------------------------------------------------------------
-void testApp::touchUp(ofTouchEventArgs & touch){
+void ofApp::touchUp(ofTouchEventArgs & touch){
 	if(prevButton.isInside) {
 		sceneManager.prevScene();
 		prevButton.isInside = false;
@@ -137,38 +135,33 @@ void testApp::touchUp(ofTouchEventArgs & touch){
 }
 
 //--------------------------------------------------------------
-void testApp::touchDoubleTap(ofTouchEventArgs & touch){
+void ofApp::touchDoubleTap(ofTouchEventArgs & touch){
 	sceneManager.nextScene();
 }
 
 //--------------------------------------------------------------
-void testApp::touchCancelled(ofTouchEventArgs & touch){
-    
+void ofApp::touchCancelled(ofTouchEventArgs & touch){
 }
 
 //--------------------------------------------------------------
-void testApp::lostFocus(){
-
+void ofApp::lostFocus(){
 }
 
 //--------------------------------------------------------------
-void testApp::gotFocus(){
-
+void ofApp::gotFocus(){
 }
 
 //--------------------------------------------------------------
-void testApp::gotMemoryWarning(){
-
+void ofApp::gotMemoryWarning(){
 }
 
 //--------------------------------------------------------------
-void testApp::deviceOrientationChanged(int newOrientation){
+void ofApp::deviceOrientationChanged(int newOrientation){
 	
 	// rotate graphics world ...
 	ofSetOrientation((ofOrientation) newOrientation);
 	
-	// set up transforms with new screen size
-	setNewScreenSize(ofGetWidth(), ofGetHeight());
+	// transformer.setNewScreenSize() is automatically called if the transformer is set
 	
 	// set button pos again
 	prevButton.set(1, ofGetHeight()-51, 50, 50);

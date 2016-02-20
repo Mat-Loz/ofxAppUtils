@@ -9,12 +9,12 @@
  *
  */
 #include "ofMain.h"
-#include "testApp.h"
+#include "ofApp.h"
 
 int main(){
 	ofSetupOpenGL(1024, 768, OF_FULLSCREEN);
 
 	// this replaces ofRunApp and kicks off the running of the app
     // with the app utils
-	ofRunAppWithAppUtils(new testApp);
+	ofRunAppWithAppUtils(new ofApp);
 }
